@@ -238,30 +238,7 @@ public class ReadFile {
 			System.exit(-1);
 		}
 		
-		if (!this.rows.isEmpty())
-		{
-			this.validateDatesOrder();
-		}
-
 		this.input.setRows(this.rows);	
-	}
-
-/**
- * 
- */
-	private void validateDatesOrder() {
-		
-		Date dLast = this.rows.get(0).getDate();
-		
-		Date dCurrent;
-		boolean validOrder = true;
-		
-		for (int i = 1; i < this.rows.size() && validOrder; i++)
-		{
-			dCurrent = this.rows.get(i).getDate();
-			validOrder = dCurrent.after(dLast);
-		}
-		
 	}
 
 
