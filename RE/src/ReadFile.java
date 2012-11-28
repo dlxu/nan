@@ -16,7 +16,7 @@ public class ReadFile {
 	
 	private String colh = "(\\s)*Transaction(\\s)+Date\\s*,\\s*Market Value\\s*,\\s*Cash Flow\\s*,\\s*Agent Fees\\s*,\\s*Benchmark\\s*,*\\s*";
 
-	private String account = "Account#:\\s*478902\\s*,*\\s*";
+	private String account = "Account#:\\s*\\d{6}\\s*,*\\s*";
 	
 	private BufferedReader br;
 	

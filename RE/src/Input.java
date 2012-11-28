@@ -23,7 +23,7 @@ public class Input {
 	public Input() {
 		this.start = -1;
 		this.end = -1;
-		this.accountNumber = "Acount number did not provided!";
+		this.accountNumber = "Acount number did not provide!";
 	}
 	/**
 	 * @return the startDate
