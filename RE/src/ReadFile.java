@@ -12,10 +12,12 @@ public class ReadFile {
 	
 	private ArrayList<Row> rows;
 	
-	private String evpr = "Evaluation Period: \\d{4}-\\d{2}-\\d{2} to \\d{4}-\\d{2}-\\d{2}(,)*";
+	private String evpr = "\\s{0,}Evaluation\\s{1,}Period:\\s{0,}\\d{4}-\\d{2}-\\d{2}\\s{1,}to\\s{1,}\\d{4}-\\d{2}-\\d{2}\\s{0,},*\\s{0,}";
 	
-	private String colh = "Transaction Date,Market Value,Cash Flow,Agent Fees,Benchmark(,)*";
+	private String colh = "(\\s)*Transaction(\\s)+Date\\s*,\\s*Market Value\\s*,\\s*Cash Flow\\s*,\\s*Agent Fees\\s*,\\s*Benchmark\\s*,*\\s*";
 
+	private String account = "Account#:\\s*478902\\s*,*\\s*";
+	
 	private BufferedReader br;
 	
 	/**
@@ -32,7 +34,6 @@ public class ReadFile {
 	public void readFile() throws IOException
 	{
 		br = new BufferedReader(new FileReader(fileName));
-		
 		String line = null ;
 		
 		int i = 0; //line number
@@ -47,6 +48,10 @@ public class ReadFile {
 		{
 					
 			i++;
+			if(line.matches(account))
+			{
+				this.input.setAccountNumber(line.replaceAll(",", ""));
+			}
 			if (line.matches(evpr))
 			{
 				foundEvpr = true;
@@ -118,6 +123,13 @@ public class ReadFile {
 			{
 				Date transactionDate = Date.valueOf(d);
 				double mv = Double.parseDouble(words[1].trim());
+				
+				//market value cannot less than zero
+				if (mv < 0)
+				{
+					System.out.println("Market value cannot be negative at line "+i+" !");
+					System.exit(-1);
+				}
 						
 				if(!transactionDate.toString().equals(d))
 				{
@@ -237,13 +249,19 @@ public class ReadFile {
 			System.exit(-1);
 		}
 		
-		//test if there is empty in side file or at the end of file.
-		if (line !=null && line.replaceAll(",","").trim().isEmpty())
+		//test if there is empty line inside file or at the end of file.
+		//assume end of input, so empty line acceptable at the end of input
+		while (line !=null)
 		{
 			i++;
-			System.out.println("Please remove empty line at line "+i+" !");
-			System.exit(-1);
+			if (!line.replaceAll(",","").trim().isEmpty())
+			{
+				System.out.println("Please check line "+i+" !");
+				System.exit(-1);
+			}
+			line = br.readLine();
 		}
+		
 
 		this.input.setRows(this.rows);	
 	}

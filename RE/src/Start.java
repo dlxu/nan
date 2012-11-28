@@ -31,7 +31,7 @@ public class Start {
 		Input in = rf.getInput();
 		
 		Roi roi = new Roi(in);
-		roi.GenerateReport();
+		roi.generateReport();
 		
 		System.out.println(roi.getReport());
 		
