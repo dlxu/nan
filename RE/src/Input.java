@@ -12,17 +12,20 @@ import java.sql.Date;
 public class Input {
 
 	private String accountNumber;
-	private Date startDate;
-	private Date endDate;
+	private Date startDate; //evaluation period
+	private Date endDate; //evaluation period
 	private int start; //start index of start date
 	private int end; //end index of end date
 	private ArrayList<Row> rows;
+	private String eWarning;
 	/**
 	 * 
 	 */
 	public Input() {
 		this.start = -1;
 		this.end = -1;
+		this.startDate = null;
+		this.endDate = null;
 		this.accountNumber = "Acount number did not provide!";
 	}
 	/**
@@ -96,6 +99,18 @@ public class Input {
 	 */
 	public void setAccountNumber(String accountNumber) {
 		this.accountNumber = accountNumber;
+	}
+	/**
+	 * @return the eWarning
+	 */
+	public String geteWarning() {
+		return eWarning;
+	}
+	/**
+	 * @param eWarning the eWarning to set
+	 */
+	public void seteWarning(String eWarning) {
+		this.eWarning = eWarning;
 	}
 	
 	

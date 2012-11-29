@@ -57,8 +57,7 @@ public class Roi {
 		
 		//days over all period
 		double oDuration = this.duration(this.rows.get(0).getDate(), this.rows.get(length-1).getDate());
-		//days evaluation period
-		double eDuration = this.duration(this.rows.get(this.eStart).getDate(), this.rows.get(this.eEnd).getDate());
+		
 		
 		this.report.append(this.input.getAccountNumber()  + "\n\n");
 		//=========over all period=================//
@@ -137,67 +136,80 @@ public class Roi {
 		//===========Evaluation period=======================//
 
 		this.report.append("\nEvaluation period: ");
-		this.report.append(this.startDate);
-		this.report.append(" to ");
-		this.report.append(this.endDate);
-		this.report.append("\n========================\nTWR: ");
 		
 		
-	
-		//TWR calculating.
-		try
+		if (this.input.getEnd() >= 0 && this.input.getStart() >= 0 )
 		{
-			twrEvaluation = this.twr(this.eStart, this.eEnd);
-/*			this.report.append(String.format("%.2f%%%n", twrEvaluation*100));
-			this.report.append("Annualized TWR: ");*/
-/*			
-			double an_twrEvaluation = twrEvaluation;
-			if (eDuration > 1)
+			//days evaluation period
+			double eDuration = this.duration(this.rows.get(this.eStart).getDate(), this.rows.get(this.eEnd).getDate());
+			
+			this.report.append(this.startDate);
+			this.report.append(" to ");
+			this.report.append(this.endDate);
+			this.report.append("\n========================\nTWR: ");
+			
+			
+		
+			//TWR calculating.
+			try
 			{
-				an_twrEvaluation = Math.pow((1 + twrEvaluation), 1/eDuration) - 1;
+				twrEvaluation = this.twr(this.eStart, this.eEnd);
+	/*			this.report.append(String.format("%.2f%%%n", twrEvaluation*100));
+				this.report.append("Annualized TWR: ");*/
+	/*			
+				double an_twrEvaluation = twrEvaluation;
+				if (eDuration > 1)
+				{
+					an_twrEvaluation = Math.pow((1 + twrEvaluation), 1/eDuration) - 1;
+				}
+				this.report.append(String.format("%.2f%%%n", an_twrEvaluation*100));*/
+				this.report.append(String.format("%.2f%%%n", this.annualize(twrEvaluation, eDuration)*100));
+			}catch (RoiException e)
+			{
+				this.report.append(e.getMessage());
+				this.report.append("\n");
 			}
-			this.report.append(String.format("%.2f%%%n", an_twrEvaluation*100));*/
-			this.report.append(String.format("%.2f%%%n", this.annualize(twrEvaluation, eDuration)*100));
-		}catch (RoiException e)
-		{
-			this.report.append(e.getMessage());
-			this.report.append("\n");
-		}
-		
-		//benchmark 
-		this.report.append("Benchmark: ");
-		try
-		{
-			//System.out.println(this.annualize(this.benchMarkRate(this.eStart, this.eEnd)-1, eDuration));
-			/*double bm = this.benchMarkRate(this.eStart, this.eEnd);
 			
-			double an_bm = bm;
-			if (eDuration > 1)
+			//benchmark 
+			this.report.append("Benchmark: ");
+			try
 			{
-
-				an_bm = Math.pow((1 + bm), (1/eDuration)) - 1;
-
-			}*/
+				//System.out.println(this.annualize(this.benchMarkRate(this.eStart, this.eEnd)-1, eDuration));
+				/*double bm = this.benchMarkRate(this.eStart, this.eEnd);
+				
+				double an_bm = bm;
+				if (eDuration > 1)
+				{
+	
+					an_bm = Math.pow((1 + bm), (1/eDuration)) - 1;
+	
+				}*/
+				
+				this.report.append(String.format("%.2f%%%n", this.annualize(this.benchMark(this.eStart, this.eEnd), eDuration)*100));
+				//this.report.append(String.format("%.2f%%%n", bm*100));
+				
+			}catch(RoiException e)
+			{
+				this.report.append(e.getMessage());
+				this.report.append("\n");
+			}
 			
-			this.report.append(String.format("%.2f%%%n", this.annualize(this.benchMark(this.eStart, this.eEnd), eDuration)*100));
-			//this.report.append(String.format("%.2f%%%n", bm*100));
+			//roi
 			
-		}catch(RoiException e)
+			this.report.append("ROI: ");		
+			try {
+				//this.report.append(this.Annualize(this.generateRoi(eStart, eEnd, twrEvaluation), eDuration));
+				double fv = this.rows.get(eEnd).getMv();
+				this.report.append(String.format("%.2f%%%n", this.annualize(this.generateRoi(eStart, eEnd, twrEvaluation, fv), eDuration)*100));
+			} catch (RoiException e) {
+				// TODO Auto-generated catch block
+				this.report.append(e.getMessage());
+				this.report.append("\n");
+			}
+		}else
 		{
-			this.report.append(e.getMessage());
-			this.report.append("\n");
-		}
-		
-		//roi
-		
-		this.report.append("ROI: ");		
-		try {
-			//this.report.append(this.Annualize(this.generateRoi(eStart, eEnd, twrEvaluation), eDuration));
-			double fv = this.rows.get(eEnd).getMv();
-			this.report.append(String.format("%.2f%%%n", this.annualize(this.generateRoi(eStart, eEnd, twrEvaluation, fv), eDuration)*100));
-		} catch (RoiException e) {
-			// TODO Auto-generated catch block
-			this.report.append(e.getMessage());
+			//System.out.println("we are here" + this.input.geteWarning());
+			this.report.append(this.input.geteWarning());
 			this.report.append("\n");
 		}
 	}
@@ -208,6 +220,8 @@ public class Roi {
 	{
 		Row sdr = this.rows.get(sd);
 		double fv = (sdr.getAf() + sdr.getCf() + sdr.getMv())*this.benchMarkRate(sd, ed);
+		
+		
 		//double pv = sdr.getAf() + sdr.getCf() + sdr.getMv();
 		
 		for (int i = sd + 1; i < ed; i++)
@@ -220,7 +234,7 @@ public class Roi {
 				fv = fv + cf*this.benchMarkRate(i, ed);
 			}
 		}
-		
+		//System.out.println(fv);
 		return this.generateRoi(sd, ed, this.benchMarkRate(sd, ed), fv);
 		
 	}
@@ -244,18 +258,23 @@ public class Roi {
 		double efractionYear = 1;
 		
 		Row r = this.rows.get(s);
+		Row re = this.rows.get(e);
 		
-		Date temp = r.getDate();
+		Date begin = r.getDate();
+		Date end = re.getDate();
 		
-		Date nextNewYearDate = this.nextNewYearDay(temp);
+		DateTime beginTime = new DateTime(begin);
+		DateTime endTime = new DateTime(end);
+		
+		Date nextNewYearDate = this.nextNewYearDay(begin);
 		Date firstNewYearDay = nextNewYearDate;
 		/*DateTime std = new DateTime(nextNewYearDate.getTime());
 		System.out.println (std.getDayOfYear() + " " + std.getYear());*/
 		
 		
-		if (!this.isNewYearDay(temp))
+		if (!this.isNewYearDay(begin))
 		{
-			sfractionYear = this.duration(temp, nextNewYearDate);
+			sfractionYear = this.duration(begin, nextNewYearDate);
 		}
 
 		
@@ -310,14 +329,30 @@ public class Roi {
 				{
 					throw new RoiException("The benchmark cannot be calculated, missing benchmark of date " + r.getDate());
 				}
-				result = result * (1 + bm);
-			}
+				if (beginTime.getYear() == endTime.getYear())//what if start date and end in same year
+				{
+					efractionYear = 1.0*(endTime.getDayOfYear() -beginTime.getDayOfYear())/(endTime.getDayOfYear() - 1);
+				}else
+				{
+					efractionYear = 1;
+				}
+					
+				result = result * Math.pow(1 + bm,efractionYear);
+			} 
 			//e is before new year day or year to date
 			//end of list of rows is before new year day, next new year day is out of scope, check end of rows for bm;
 			else if (this.rows.get(this.rows.size()-1).getDate().compareTo(nextNewYearDate) < 0)
 			{
 				Row lastRow = this.rows.get(this.rows.size()-1);
-				efractionYear = 1.0*(new DateTime(r.getDate()).getDayOfYear())/(new DateTime(lastRow.getDate()).getDayOfYear());
+				
+				if (beginTime.getYear() == endTime.getYear())
+				{
+					efractionYear = 1.0*(endTime.getDayOfYear() -beginTime.getDayOfYear())/(new DateTime(lastRow.getDate()).getDayOfYear() - 1);
+				}else
+				{
+					efractionYear = 1.0*(endTime.getDayOfYear() - 1)/(new DateTime(lastRow.getDate()).getDayOfYear() - 1);
+				}
+				
 				double bm = lastRow.getBm();
 				if (Double.isNaN(bm))
 				{
@@ -334,7 +369,14 @@ public class Roi {
 				{
 					r = this.rows.get(i);
 					
-					efractionYear = (new DateTime(this.rows.get(e).getDate()).getDayOfYear())/Roi.daysOfYear;
+					if (beginTime.getYear() == endTime.getYear())
+					{
+						efractionYear = 1.0*(endTime.getDayOfYear() -beginTime.getDayOfYear())/Roi.daysOfYear;
+					}else
+					{
+						efractionYear = (endTime.getDayOfYear() - 1)/Roi.daysOfYear;
+					}
+				
 					//System.out.println(new DateTime(this.rows.get(e).getDate()).getDayOfYear());
 					
 					if (r.getDate().compareTo(nextNewYearDate) == 0)
