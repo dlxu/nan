@@ -11,6 +11,11 @@ public class RoiException extends Exception {
 	/**
 	 * 
 	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * 
+	 */
 	public RoiException() {
 		// TODO Auto-generated constructor stub
 	}

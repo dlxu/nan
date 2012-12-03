@@ -1,12 +1,12 @@
 import java.sql.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 
+import de.jtem.numericalMethods.calculus.function.RealFunctionOfOneVariable;
+import de.jtem.numericalMethods.calculus.rootFinding.Brent;
 import de.jtem.numericalMethods.calculus.rootFinding.NewtonRaphson;
 
 /**
@@ -58,15 +58,15 @@ public class Roi {
 		//days over all period
 		double oDuration = this.duration(this.rows.get(0).getDate(), this.rows.get(length-1).getDate());
 		
-		
-		this.report.append(this.input.getAccountNumber()  + "\n\n");
+		this.report.append("\n===========================================\n");
+		this.report.append(this.input.getAccountNumber()  + "\n===========================================\n\n");
 		//=========over all period=================//
 		//=========over all period=================//
 		this.report.append("Overall period: ");
 		this.report.append(this.rows.get(0).getDate());
 		this.report.append(" to ");
 		this.report.append(this.rows.get(length-1).getDate());
-		this.report.append("\n========================\nTWR: ");
+		this.report.append("\n===========================================\nTWR: ");
 	
 		
 		
@@ -121,7 +121,7 @@ public class Roi {
 		this.report.append("ROI: ");		
 		try {
 			double fv = this.rows.get(length - 1).getMv();
-			this.report.append(String.format("%.2f%%%n", this.annualize(this.generateRoi(0, length - 1, twrOverall, fv),oDuration)*100));
+			this.report.append(String.format("%.2f%%%n", this.annualize(this.generateRoi(0, length - 1, twrOverall+1, fv),oDuration)*100));
 		} catch (RoiException e) {
 			// TODO Auto-generated catch block
 			this.report.append(e.getMessage());
@@ -146,7 +146,7 @@ public class Roi {
 			this.report.append(this.startDate);
 			this.report.append(" to ");
 			this.report.append(this.endDate);
-			this.report.append("\n========================\nTWR: ");
+			this.report.append("\n===========================================\nTWR: ");
 			
 			
 		
@@ -235,6 +235,10 @@ public class Roi {
 			}
 		}
 		//System.out.println(fv);
+		if (fv < 0)
+		{
+			throw new RoiException("The benchmark will give you a negative return on your investiment!");
+		}
 		return this.generateRoi(sd, ed, this.benchMarkRate(sd, ed), fv);
 		
 	}
@@ -278,7 +282,7 @@ public class Roi {
 		}
 
 		
-		for (int i = s; i <= e; i++ )
+		for (int i = s + 1; i <= e; i++ )
 		{
 			
 			r = this.rows.get(i);
@@ -295,10 +299,14 @@ public class Roi {
 				if (r.getDate().compareTo(firstNewYearDay)==0)
 				{
 					result = result * Math.pow(1+bm, sfractionYear);
+					//System.out.printf("benchmark %f value %f %n", bm, Math.pow(1+bm, sfractionYear));
 				}else 
 				{
 					result = result * (1 + bm);
+					//System.out.println("benchmark "+ bm);
 				}
+				
+				
 				nextNewYearDate = this.nextNewYearDay(r.getDate());
 				
 			}else if (r.getDate().compareTo(nextNewYearDate) > 0)
@@ -319,10 +327,18 @@ public class Roi {
 		else if(r.getDate().compareTo(nextNewYearDate) == 0 || this.rows.size() == (e + 1)) */
 		
 		//e is not new year day.
+		r = this.rows.get(e);
+		nextNewYearDate = this.nextNewYearDay(r.getDate());
 		if (!this.isNewYearDay(r.getDate())){
 			
 			//(end of period e is last row over all period)year to date, next new year day is not in scope
-			if(this.rows.size() == (e + 1))
+			
+			int deltaDays = endTime.getDayOfYear() - 1;
+			if (beginTime.getYear() == endTime.getYear())//what if start date and end in same year
+			{
+				deltaDays = endTime.getDayOfYear() -beginTime.getDayOfYear();
+			}
+		/*	if(this.rows.size() == (e + 1))
 			{
 				double bm = r.getBm();
 				if (Double.isNaN(bm))
@@ -341,17 +357,18 @@ public class Roi {
 			} 
 			//e is before new year day or year to date
 			//end of list of rows is before new year day, next new year day is out of scope, check end of rows for bm;
-			else if (this.rows.get(this.rows.size()-1).getDate().compareTo(nextNewYearDate) < 0)
+			else*/
+			if (this.rows.get(this.rows.size()-1).getDate().compareTo(nextNewYearDate) < 0)
 			{
 				Row lastRow = this.rows.get(this.rows.size()-1);
-				
+/*				
 				if (beginTime.getYear() == endTime.getYear())
-				{
-					efractionYear = 1.0*(endTime.getDayOfYear() -beginTime.getDayOfYear())/(new DateTime(lastRow.getDate()).getDayOfYear() - 1);
-				}else
+				{*/
+					efractionYear = 1.0*deltaDays/(new DateTime(lastRow.getDate()).getDayOfYear() - 1);
+	/*			}else
 				{
 					efractionYear = 1.0*(endTime.getDayOfYear() - 1)/(new DateTime(lastRow.getDate()).getDayOfYear() - 1);
-				}
+				}*/
 				
 				double bm = lastRow.getBm();
 				if (Double.isNaN(bm))
@@ -368,20 +385,21 @@ public class Roi {
 				for (int i = e + 1; i < this.rows.size() && !found; i++ )
 				{
 					r = this.rows.get(i);
-					
+/*					
 					if (beginTime.getYear() == endTime.getYear())
 					{
 						efractionYear = 1.0*(endTime.getDayOfYear() -beginTime.getDayOfYear())/Roi.daysOfYear;
 					}else
 					{
 						efractionYear = (endTime.getDayOfYear() - 1)/Roi.daysOfYear;
-					}
+					}*/
 				
 					//System.out.println(new DateTime(this.rows.get(e).getDate()).getDayOfYear());
 					
 					if (r.getDate().compareTo(nextNewYearDate) == 0)
 					{
 						double bm = r.getBm();
+						efractionYear = 1.0*deltaDays/Roi.daysOfYear;
 	
 						if (Double.isNaN(bm))
 						{
@@ -394,6 +412,8 @@ public class Roi {
 						throw new RoiException("The benchmark cannot be calculated, missing benchmark of date " + nextNewYearDate);
 					}
 				}
+				
+
 				
 		/*		//if 
 				if (!found) // if not found, check the last row in data, which is before nextnewyear date 
@@ -409,7 +429,7 @@ public class Roi {
 			}
 		}
 		
-		
+		//System.out.println(result);
 		return result;
 	}
 
@@ -431,7 +451,7 @@ public class Roi {
 			double denominator = r.getAf() + r.getMv() + r.getCf();
 			if (denominator <= 0)
 			{
-				throw new RoiException("The sum of market value, cash flow and agent is not positive at date " + r.getDate());
+				throw new RoiException("The sum of market value, cash flow is not positive on date " + r.getDate());
 			}
 			result = result * this.rows.get(i).getMv()/denominator;
 		}
@@ -449,6 +469,16 @@ public class Roi {
 	 */
 	private double generateRoi(int first, int last, double twr, double fv) throws RoiException
 	{
+		
+		if (!this.checkRoi(first, last))
+		{
+			throw new RoiException("Market value and cash flow are all zero in the period, nothing can be done!");
+		}
+		/*if (fv == 0)
+		{
+			return -1;
+		}
+		*/
 		double result = 1;
 		Date theLastDay = this.rows.get(last).getDate();
 		Date theFirstDay = this.rows.get(first).getDate();
@@ -456,7 +486,7 @@ public class Roi {
 		
 		final double pv = r.getMv() + r.getAf() + r.getCf();
 		final double fvalue = fv;
-		
+		//System.out.println("fv "+fvalue);
 		double overall = this.duration(theFirstDay, theLastDay);
 		HashMap<Double,Double> map = new HashMap<Double,Double>();
 
@@ -472,6 +502,20 @@ public class Roi {
 		
 		final HashMap<Double,Double> map2 = map;
 		
+		RealFunctionOfOneVariable rfo = new RealFunctionOfOneVariable(){
+			public double eval(double x){
+				double f = pv * x - fvalue;
+				
+				
+				for (double d : map2.keySet()) 
+				{
+					f = f + map2.get(d) * Math.pow(x, d);
+				}
+				
+				return f;
+			}
+		};
+		
 		NewtonRaphson.RealFunctionWithDerivative rf = new NewtonRaphson.RealFunctionWithDerivative() {
 			public void eval(double x, double[] f, int offsetF, double[] df,
 					int offsetDF) 
@@ -482,6 +526,7 @@ public class Roi {
 				m[offsetF] = pv * x - fv;
 				n[offsetDF] = pv;*/
 				f[offsetF] = pv * x - fvalue;
+				
 				df[offsetDF] = pv;
 				for (double d : map2.keySet()) 
 				{
@@ -494,20 +539,43 @@ public class Roi {
 			}
 		};
 
-           double[] rootValues = new double[3];
-           try
-           {
-           NewtonRaphson.search(rf, twr+1, rootValues ); // start our serch in 0.6
-           }catch(RuntimeException e)
-           {
-        	   throw new RoiException("The roi cannot be found");
-           }
+          double[] rootValues = new double[3];
+          boolean success = false;
+          for (int i = 1; i < 15 && !success ; i++)
+          {
+	           success = true;
+	           double guess = Math.pow(i, 2);
+        	  try
+	           {
+        		  NewtonRaphson.search(rf, guess, rootValues ); // start our serch in 0.6
+	           }catch(RuntimeException e)
+	           {
+
+	        	   success = false;
+	        	   //throw new RoiException("cannot be calculated, check your input!");
+	           }
+        	  
+          }
+          
+          if (!success)
+          {
+        	try{
+        		result = Brent.search(rfo, 0, 100, 0.000001) - 1; // start our serch in 0.6
+        	}catch (Exception e)
+        	{
+        		throw new RoiException("cannot be calculated, check your input!");
+        	}
+	           
+          }
+          else{
+        	  result = rootValues[0] - 1;
+          }
 		/*for (double d: rootValues)
 		{
 			System.out.println(d + " roi ");
 		}
 		*/
-		result = rootValues[0] - 1;
+		
 		
 		
 		return result;
@@ -561,7 +629,21 @@ public class Roi {
 		return 	(duration > 1)? Math.pow((1 + input), (1/duration)) - 1 : input;
 	}
 	
-	
+	/**
+	 * 
+	 * @param a
+	 * @param b
+	 */
+	private boolean checkRoi(int a, int b)
+	{
+		boolean good = false;
+		for (int i = a; i < this.rows.size() && !good; i++)
+		{
+			Row rtemp = this.rows.get(i);
+			if (rtemp.getMv() !=0 || rtemp.getCf() != 0) good = true;
+		}
+		return good;
+	}
 	
 	/**
 	 * @return the report

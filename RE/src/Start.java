@@ -1,6 +1,6 @@
-import java.io.File;
+
 import java.io.IOException;
-import java.sql.Date;
+
 
 
 public class Start {
@@ -22,7 +22,7 @@ public class Start {
 			rf.readFile();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 			System.out.println("Error opening file, please verify your file name and location, thanks.!");
 			System.exit(-2);
 			
@@ -35,11 +35,11 @@ public class Start {
 		
 		System.out.println(roi.getReport());
 		
-		System.out.printf("Evaluation period: start date %s end date %s%n",in.getStartDate(), in.getEndDate() );
+/*		System.out.printf("Evaluation period: start date %s end date %s%n",in.getStartDate(), in.getEndDate() );
 		for (Row r: in.getRows())
 		{
 			System.out.printf("%s %.2f %.2f %.2f %.3f %n", r.getDate(), r.getMv(), r.getCf(), r.getAf(), r.getBm());
-		}
+		}*/
 	}
 
 }

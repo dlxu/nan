@@ -18,7 +18,7 @@ public class ReadFile {
 	
 	private String colh = "(\\s)*Transaction(\\s)+Date\\s*,\\s*Market Value\\s*,\\s*Cash Flow\\s*,\\s*Agent Fees\\s*,\\s*Benchmark\\s*,*\\s*";
 
-	private String account = "\\s*Account#:\\s*\\d{1,}\\s*,*\\s*";
+	private String name = "\\s*Name:\\s*\\w+[\\s\\w]*\\s*,*\\s*";
 	
 	private BufferedReader br;
 	
@@ -55,7 +55,7 @@ public class ReadFile {
 			i++;
 			
 			//find account number
-			if(line.matches(account))
+			if(line.matches(name))
 			{
 				this.input.setAccountNumber(line.replaceAll(",", ""));
 			}
@@ -119,7 +119,7 @@ public class ReadFile {
 		
 		if (!foundCh)
 		{
-			System.out.println("Column head not found !");
+			System.out.println("Column head not found or invalid!");
 			System.exit(-1);
 		}
 		
@@ -134,7 +134,7 @@ public class ReadFile {
 			int length = words.length;
 			if (length < 2) 
 			{
-				System.out.println("Invalid input at line " + i + ", please verify you input first!");
+				System.out.println("Invalid input at line " + i + ", please verify your input first!");
 				System.exit(-2);
 			}
 			
@@ -172,6 +172,16 @@ public class ReadFile {
 				r.setDate(transactionDate);
 				r.setMv(mv);
 				
+				if(this.rows.size()>0 )
+				{
+					Row p = this.rows.get(this.rows.size()-1);
+					if ((p.getCf()+p.getMv())==0 && mv > 0)
+					{
+						System.out.println("Impossible market value input at line "+i+" !");
+						System.exit(-1);
+					}
+				}
+				
 			}catch (NumberFormatException e)
 			{
 				System.out.println("Invalid market value input at line "+i+" !");
@@ -185,6 +195,12 @@ public class ReadFile {
 			r.setAf(0);
 			r.setBm(Double.NaN);
 			r.setCf(0);
+			
+			if (r.getCf() + r.getMv() < 0)
+			{
+				System.out.println("Cannot withdraw more than you have!");
+				System.exit(-1);
+			}
 			
 			//cash flow
 			if (length > 2 )
@@ -272,7 +288,7 @@ public class ReadFile {
 		
 		if (this.input.getStartDate()!=null && this.input.getEndDate()!=null && (this.input.getStart() < 0 || this.input.getEnd() < 0))
 		{
-			this.input.seteWarning("The evaluation period out of boundary!");
+			this.input.seteWarning("The evaluation period out of scope!");
 		}
 		
 		//test if there is empty line inside file or at the end of file.
@@ -288,6 +304,11 @@ public class ReadFile {
 			line = br.readLine();
 		}
 		
+		if (this.rows.size()<2)
+		{
+			System.out.println("Sorry, cannot compute any information for you with only one transaction");
+			System.exit(-1);
+		}
 
 		this.input.setRows(this.rows);	
 	}

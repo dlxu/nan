@@ -11,7 +11,7 @@ import java.sql.Date;
  */
 public class Input {
 
-	private String accountNumber;
+	private String name;
 	private Date startDate; //evaluation period
 	private Date endDate; //evaluation period
 	private int start; //start index of start date
@@ -26,7 +26,7 @@ public class Input {
 		this.end = -1;
 		this.startDate = null;
 		this.endDate = null;
-		this.accountNumber = "Acount number did not provide!";
+		this.name = "Name did not provide or invalid!";
 	}
 	/**
 	 * @return the startDate
@@ -92,13 +92,13 @@ public class Input {
 	 * @return the accountNumber
 	 */
 	public String getAccountNumber() {
-		return accountNumber;
+		return name;
 	}
 	/**
 	 * @param accountNumber the accountNumber to set
 	 */
 	public void setAccountNumber(String accountNumber) {
-		this.accountNumber = accountNumber;
+		this.name = accountNumber;
 	}
 	/**
 	 * @return the eWarning
